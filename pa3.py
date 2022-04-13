@@ -75,7 +75,7 @@ def select(tokens):
     #remove any commas present in any tokens
     tokens = [elem.replace(",", '') for elem in tokens]
 
-    #group by and order by filters, *** ignored fo this pA but included for conceptual understanding
+    #group by and order by filters, *** ignored for this pA but included for conceptual understanding
     #   and modularitty if needed in next PA's
     x = 0
     while(x != (len(tokens) - 1)):
@@ -88,9 +88,11 @@ def select(tokens):
             tokens[x : x+2] = [''.join(tokens[x : x+2])]
             x -= 1
         x += 1
-
-    #from_args is for tablenames as well as joins
-    TB.print_table_attributes(my_db_sys.database_select(tokens))
+    try:
+        #from_args is for tablenames as well as joins
+        TB.print_table_attributes(my_db_sys.database_select(tokens))
+    except Exception as e:
+        print(e)
 
 def alter_tb(tokens):
     #remove the table token as it is unecessary for the alter keyword
@@ -109,12 +111,12 @@ def insert_record(tokens):
     #removes into
     tokens = tokens[1:]
     #removes 'values' and the first '(' surrounding the parameters
-    tokens[1] = (tokens[1].split("("))[1]
+    tokens[2] = tokens[2].replace('(', '')
     #removes the last ')' surrounding the parameters
     tokens[-1] = tokens[-1][:-1]
     #remove all commas
     tokens = [token.replace(",", "") for token in tokens]
-    my_db_sys.insert_data(tokens[0], tokens[1:])
+    my_db_sys.insert_data(tokens[0], tokens[2:])
 
 def delete(tokens):
     table_name = tokens[1]
@@ -151,7 +153,10 @@ def main():
                 new_line = new_line.replace('\n', ' ')
                 #remove tabs errors if string is empty
                 new_line = new_line.replace('\t', ' ')
-                
+                #make sure that the paranthese is not separated from other keywords
+                new_line = new_line.replace("(", " (", 1)
+
+                new_line = new_line.replace(',', ", ")
                 #dont add line if its a comment or an empty line 
                 if((new_line != "") and (new_line[:2] != "--")):
                     if(line == ""):

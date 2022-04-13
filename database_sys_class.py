@@ -86,8 +86,7 @@ class database_sys:
         
         #check the table loaded properly
         if(some_table == []):
-            print("Unable to querry table as table could not be loaded")
-            return []
+            raise Exception("!Failed to query table " + table_names[0] + " because it does not exist.")
 
         #special case where we are doing no extra augmentations but only retriving table columns
         if(0 == len(tokens)):

@@ -88,7 +88,7 @@ def load_table(database_name, table_name):
         table_file.close()
         return list_of_lists
     except:
-        print("Failed to load data from " + table_name)
+        #print("Failed to load data from " + table_name)
         return []
 #function responsible for saving the two dimensional list to the table file with
 #   appropriate formating
