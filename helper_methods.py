@@ -55,22 +55,50 @@ def three_arg_lists(tokens, table_1_var, table_2_var):
         operator = tokens[arg + 1]
         right = tokens[arg + 2]
         #single table
-        if(left[0].lower() == right[0].lower()):
-            if(left[0].lower() == table_1_var.lower()):
-                table_1_args.append(left[2:])
-                table_1_args.append(operator)
-                table_1_args.append(right[2:])
-            elif(left[0].lower() == table_2_var.lower()):
-                table_2_args.append(left[2:])
-                table_2_args.append(operator)
-                table_2_args.append(right[2:])
+        left_has_var = "." in left
+        right_has_var = "." in right
+
+        if(not(left_has_var and right_has_var)):
+            #lhs var
+            if(left_has_var):
+                if(left[0].lower() == table_1_var.lower()):
+                    table_1_args.append(left[2:])
+                    table_1_args.append(operator)
+                    table_1_args.append(right)
+                elif(left[0].lower() == table_2_var.lower()):
+                    table_2_args.append(left[2:])
+                    table_2_args.append(operator)
+                    table_2_args.append(right)
+            #rhs var
+            elif(right_has_var):
+                if(left[0].lower() == table_1_var.lower()):
+                    table_1_args.append(left)
+                    table_1_args.append(operator)
+                    table_1_args.append(right[2:])
+                elif(left[0].lower() == table_2_var.lower()):
+                    table_2_args.append(left)
+                    table_2_args.append(operator)
+                    table_2_args.append(right[2:])
             else:
                 #invalid operation
                 pass
-        #join on
+        #join on because both sides have a var
         else:
             join_on_args.append(left)
-            #$$$
+            #join by definition uses '=' so here we enforce that
             join_on_args.append("=")
             join_on_args.append(right)
     return table_1_args, table_2_args, join_on_args
+
+def abs_index(string_list, desired_string):
+    exit = False
+    index = 0
+    while(not exit):
+        if string_list[index].lower() == desired_string.lower():
+            exit = True
+        elif index >= len(string_list):
+            exit = True
+            index = -1
+        else:
+            index += 1
+    return index

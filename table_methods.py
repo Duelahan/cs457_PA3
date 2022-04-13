@@ -6,6 +6,7 @@
 #File: File for the table methods
 
 #libraries
+from ntpath import join
 import sys
 import os
 import helper_methods as helper
@@ -124,8 +125,11 @@ def print_table_attributes(database_table):
                 data_value = database_table[x1][x2]
                 #check if the data value is a string
                 if(isinstance(data_value, str)):
-                    #if it is then remove the "'" surrounding the actual string value
-                    data_value = data_value.replace("'", "")
+                    if(data_value == "NULL"):
+                        data_value = ""
+                    else:
+                        #if it is then remove the "'" surrounding the actual string value
+                        data_value = data_value.replace("'", "")
                 else:
                     data_value = str(data_value)
                 temp = temp + data_value + "|"
@@ -377,10 +381,8 @@ def remove_all_other_columns(some_table, attributes_to_keep):
     #return the modified table
     return temp_table
 
+#***
 def binary_join(database_name, table_names, tokens):
-    joined_table = []
-    #default join
-
     table_1_name = table_names[0]
     table_1_var = table_names[1]
 
@@ -392,30 +394,28 @@ def binary_join(database_name, table_names, tokens):
         table_2_var = table_names[3]
 
         table_1, table_2, join_on_args = build_prejoin_tables(database_name, table_1_name, table_1_var, table_2_name, table_2_var, tokens)
-        print(join_on_args)
-        print(table_1)
-        print(table_2)
-        return([])
+        return inner_join(table_1, table_1_var, table_2, table_2_var, join_on_args)
+       
     #inner join
     elif(table_names[2].lower() == "inner" and table_names[3].lower() == "join"):
-        print("inner")
+        #same strategy as default
         table_2_name = table_names[4]
         table_2_var = table_names[5]
 
         table_1, table_2, join_on_args = build_prejoin_tables(database_name, table_1_name, table_1_var, table_2_name, table_2_var, tokens)
+        return inner_join(table_1, table_1_var, table_2, table_2_var, join_on_args)
 
     #left outer join
     elif(table_names[2].lower() == "left" and table_names[3].lower() == "outer" and table_names[4].lower() == "join"):
-        print("Left O")
         table_2_name = table_names[5]
         table_2_var = table_names[6]
 
         table_1, table_2, join_on_args = build_prejoin_tables(database_name, table_1_name, table_1_var, table_2_name, table_2_var, tokens)
-
-
+        return outer_join(table_1, table_1_var, table_2, table_2_var, join_on_args)
+    #issue joining tables
     else:
-        print("Invalid join operation")
-    return joined_table
+        print("Error in binary")
+        raise Exception("Invalid join operation: join type/syntax not supportted")
 
 def build_prejoin_tables(database_name, table_1_name, table_1_var, table_2_name, table_2_var, tokens):
     table_1_args, table_2_args, join_on_args = helper.three_arg_lists(tokens, table_1_var, table_2_var)
@@ -434,8 +434,76 @@ def load_and_whereselect(database_name, table_name, tokens):
         delete_record(some_table, records_to_del)
     return some_table
 
+#inner join implementation ***
+def inner_join(table_1, table_1_var, table_2, table_2_var, join_on_args):
+    joined_table = []
+    #create joined table metadata
+    joined_table.append(table_1[0] + table_2[0])
+    joined_table.append(table_1[1] + table_2[1])
+    
+    for row_t1 in table_1[2:]:
+        for row_t2 in table_2[2:]:
+            temp_join_row = row_t1 + row_t2
+            valid = valid_join(temp_join_row, table_1, table_1_var, table_2, table_2_var, join_on_args)
+            #joined elements pass the provided arguments
+            if(valid):
+                joined_table.append(temp_join_row)
+    return joined_table
 
-def inner_join():
-    pass
-def left_outer_join():
-    pass
+
+#outer join implementation ***
+def outer_join(table_1, table_1_var, table_2, table_2_var, join_on_args, axis='left'):
+    joined_table = []
+    #create joined table metadata
+    joined_table.append(table_1[0] + table_2[0])
+    joined_table.append(table_1[1] + table_2[1])
+
+    for row_t1 in table_1[2:]:
+        valid_found = False
+        for row_t2 in table_2[2:]:
+            temp_join_row = row_t1 + row_t2
+            valid = valid_join(temp_join_row, table_1, table_1_var, table_2, table_2_var, join_on_args)
+            #joined elements pass the provided arguments
+            if(valid):
+                joined_table.append(temp_join_row)
+                valid_found = True
+        #if no valid join for this particular row in table 1, then add it anyways with null values
+        if(not valid_found):
+            null_list = []
+            for ele in table_2[0]:
+                null_list.append("NULL")
+            joined_table.append(row_t1 + null_list)
+    return joined_table
+
+def valid_join(temp_join_row, table_1, table_1_var, table_2, table_2_var, join_on_args):
+    valid = True
+    for arg in range(0, len(join_on_args), 3):
+        left = join_on_args[arg]
+        right = join_on_args[arg + 2]
+        #left var is the var for table 1
+        if(left[0].lower() == table_1_var.lower()):
+            if(right[0].lower() == table_2_var.lower()):
+                #left is table 1, right is table 2
+                #gets index of table 1's element  and table 2's
+                table_1_index = helper.abs_index(table_1[0], left[2:])
+                #need to factor in len of tabe 1 to find proepr index in join
+                table_2_index = len(table_1[0]) + helper.abs_index(table_2[0], right[2:])
+                if(temp_join_row[table_1_index] != temp_join_row[table_2_index]):
+                    valid = False
+            else:
+                #error
+                pass
+        #right var is the var for table 1
+        elif(right[0].lower() == table_1_var.lower()):
+            if(left[0].lower() == table_2_var.lower()):
+                #left is table 2, right is table 1
+                #gets index of table 1's element  and table 2's
+                table_1_index = helper.abs_index(table_1[0], right[2:])
+                #need to factor in len of tabe 1 to find proepr index in join
+                table_2_index = len(table_1[0]) + helper.abs_index(table_2[0], left[2:])
+                if(temp_join_row[table_1_index] != temp_join_row[table_2_index]):
+                    valid = False
+            else:
+                #error
+                pass
+    return valid
