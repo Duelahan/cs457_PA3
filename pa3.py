@@ -75,7 +75,7 @@ def select(tokens):
     #remove any commas present in any tokens
     tokens = [elem.replace(",", '') for elem in tokens]
 
-    #group by and order by filters, *** ignored for this pA but included for conceptual understanding
+    #group by and order by filters, *** ignored for this PA but included for conceptual understanding
     #   and modularitty if needed in next PA's
     x = 0
     while(x != (len(tokens) - 1)):

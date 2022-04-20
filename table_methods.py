@@ -381,7 +381,7 @@ def remove_all_other_columns(some_table, attributes_to_keep):
     #return the modified table
     return temp_table
 
-#***
+#default function for joins that determines if the join is an inner, outer, or default, it then 
 def binary_join(database_name, table_names, tokens):
     table_1_name = table_names[0]
     table_1_var = table_names[1]
@@ -417,6 +417,7 @@ def binary_join(database_name, table_names, tokens):
         print("Error in binary")
         raise Exception("Invalid join operation: join type/syntax not supportted")
 
+#builds and where selects the tables that will be used in a binary join
 def build_prejoin_tables(database_name, table_1_name, table_1_var, table_2_name, table_2_var, tokens):
     table_1_args, table_2_args, join_on_args = helper.three_arg_lists(tokens, table_1_var, table_2_var)
 
@@ -425,6 +426,7 @@ def build_prejoin_tables(database_name, table_1_name, table_1_var, table_2_name,
 
     return table_1, table_2, join_on_args
 
+#loads tables and perfroms where query on table to reduce its size, returns this where quered table
 def load_and_whereselect(database_name, table_name, tokens):
     some_table = load_table(database_name, table_name)
     if(tokens != []):
@@ -434,7 +436,7 @@ def load_and_whereselect(database_name, table_name, tokens):
         delete_record(some_table, records_to_del)
     return some_table
 
-#inner join implementation ***
+#inner join implementation that purly joins the specified tables on the spcified column arguments
 def inner_join(table_1, table_1_var, table_2, table_2_var, join_on_args):
     joined_table = []
     #create joined table metadata
@@ -451,7 +453,7 @@ def inner_join(table_1, table_1_var, table_2, table_2_var, join_on_args):
     return joined_table
 
 
-#outer join implementation ***
+#outer join implementation that purly joins the specified tables on the spcified column arguments
 def outer_join(table_1, table_1_var, table_2, table_2_var, join_on_args, axis='left'):
     joined_table = []
     #create joined table metadata
@@ -475,6 +477,7 @@ def outer_join(table_1, table_1_var, table_2, table_2_var, join_on_args, axis='l
             joined_table.append(row_t1 + null_list)
     return joined_table
 
+#function that takes a record and a list representing the columns to check the equivlancy of, returns wheter the specified columns are equal or not
 def valid_join(temp_join_row, table_1, table_1_var, table_2, table_2_var, join_on_args):
     valid = True
     for arg in range(0, len(join_on_args), 3):

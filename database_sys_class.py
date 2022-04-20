@@ -154,6 +154,7 @@ class database_sys:
         else:
             print("1 new record inserted")
     
+    #wipes all records matching the given list of relational args (one dimensional and in order) from table in disk
     def delete_from_database(self, table_name, relational_args):
         some_table = TB.load_table(database_sys.database_in_use, table_name)
         original_len = len(some_table)

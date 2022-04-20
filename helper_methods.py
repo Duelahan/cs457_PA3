@@ -45,6 +45,9 @@ def convert_token(data_type, token):
         except:
             raise Exception("Invalid datatype for conversion")
 
+#takes in a list of tokens and the join variables for two tables
+# it then creates and returns three lists, one comprised of arguments for the first table, one for arguments for the second table,
+# and the third for the column equivlences to join on
 def three_arg_lists(tokens, table_1_var, table_2_var):
     table_1_args = []
     table_2_args = []
@@ -90,6 +93,7 @@ def three_arg_lists(tokens, table_1_var, table_2_var):
             join_on_args.append(right)
     return table_1_args, table_2_args, join_on_args
 
+#gets the index of a string within a list regardless of the caseing in the list or the input string
 def abs_index(string_list, desired_string):
     exit = False
     index = 0
